@@ -66,21 +66,6 @@ Here is a short list:
 - `pibooth-telegram-upload <https://pypi.org/project/pibooth-telegram-upload>`_
 - `pibooth-s3-upload <https://pypi.org/project/pibooth-s3-upload>`_
 
-Sponsors
---------
-
-An enormous thanks to our sponsors:
-
-- `@andhey <https://github.com/andhey>`_
-- `@vo55 <https://github.com/vo55>`_
-- `@laurammiller <https://github.com/laurammiller>`_
-- `@neilrenfrey <https://github.com/neilrenfrey>`_
-- `@agrovista <https://github.com/agrovista>`_ 
-- `@mozdi <https://github.com/mozdi>`_
-- `@MikkeBoomBoom <https://github.com/MikkeBoomBoom>`_
-- `@fatgeek <https://github.com/fatgeek>`_
-
-It means a lot to us!
 
 .. |Pibooth| image:: https://raw.githubusercontent.com/pibooth/pibooth/master/docs/pibooth.png
    :align: middle
