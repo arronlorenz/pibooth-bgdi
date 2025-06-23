@@ -235,7 +235,11 @@ class PictureFactory(object):
                 continue
             # Use PIL to draw text because better support for fonts than OpenCV
             font = fonts.get_pil_font(text, font_name, max_width, max_height)
-            _, text_height = font.getsize(text)
+            if hasattr(font, "getbbox"):
+                bbox = font.getbbox(text)
+                text_height = bbox[3] - bbox[1]
+            else:
+                _, text_height = font.getsize(text)
             (text_width, _baseline), (offset_x, offset_y) = font.font.getsize(text)
             if align == self.CENTER:
                 text_x += (max_width - text_width) // 2
