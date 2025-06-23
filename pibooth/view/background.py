@@ -75,7 +75,7 @@ class Background(object):
         self._text_border = 20  # Distance to other elements
         self._text_color = text_color
 
-        # Build rectangles around some areas for debuging purpose
+        # Build rectangles around some areas for debugging purpose
         self._show_outlines = True
         self._outlines = []
 

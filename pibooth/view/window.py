@@ -9,6 +9,8 @@ import contextlib
 import pygame
 from pygame import gfxdraw
 from PIL import Image
+
+RESAMPLE_LANCZOS = getattr(Image, 'Resampling', Image).LANCZOS
 from pibooth import pictures, fonts
 from pibooth.view import background
 from pibooth.utils import LOGGER
@@ -98,8 +100,10 @@ class PiWindow(object):
             image = buff_image
         else:
             if resize:
-                image = pil_image.resize(sizing.new_size_keep_aspect_ratio(
-                    pil_image.size, image_size_max), Image.ANTIALIAS)
+                image = pil_image.resize(
+                    sizing.new_size_keep_aspect_ratio(
+                        pil_image.size, image_size_max),
+                    RESAMPLE_LANCZOS)
             else:
                 image = pil_image
             image = pygame.image.frombuffer(image.tobytes(), image.size, image.mode)
@@ -111,7 +115,7 @@ class PiWindow(object):
         self._current_foreground = (pil_image, pos, resize)
 
         if self.debug and resize:
-            # Build rectangle around picture area for debuging purpose
+            # Build rectangle around picture area for debugging purpose
             outlines = pygame.Surface(image_size_max, pygame.SRCALPHA, 32)
             pygame.draw.rect(outlines, pygame.Color(255, 0, 0), outlines.get_rect(), 2)
             self.surface.blit(outlines, self._pos_map[pos](outlines))
@@ -134,7 +138,7 @@ class PiWindow(object):
         """Update the captures counter displayed.
         """
         if not self._capture_number[0]:
-            return  # Dont show counter: no picture taken
+            return  # Don't show counter: no picture taken
 
         center = self.surface.get_rect().center
         radius = 10
@@ -153,7 +157,7 @@ class PiWindow(object):
         """Update the number of files in the printer queue.
         """
         if not self._print_number and not self._print_failure:
-            return  # Dont show counter: no file in queue, no failure
+            return  # Don't show counter: no file in queue, no failure
 
         smaller = self.surface.get_size()[1] if self.surface.get_size(
         )[1] < self.surface.get_size()[0] else self.surface.get_size()[0]

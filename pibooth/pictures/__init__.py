@@ -2,6 +2,10 @@
 
 import os.path as osp
 from PIL import Image, ImageOps
+
+# Pillow 10 deprecates direct usage of Image.ANTIALIAS/LANCZOS
+RESAMPLE_LANCZOS = getattr(Image, 'Resampling', Image).LANCZOS
+RESAMPLE_NEAREST = getattr(Image, 'Resampling', Image).NEAREST
 import pygame
 from pibooth import language
 from pibooth import fonts
@@ -93,8 +97,9 @@ def get_pygame_image(name, size=None, antialiasing=True, hflip=False, vflip=Fals
 
         if crop:
             pil_image = pil_image.crop(sizing.new_size_by_croping_ratio(pil_image.size, size))
-        pil_image = pil_image.resize(sizing.new_size_keep_aspect_ratio(pil_image.size, size),
-                                     Image.ANTIALIAS if antialiasing else Image.NEAREST)
+        resample = RESAMPLE_LANCZOS if antialiasing else RESAMPLE_NEAREST
+        pil_image = pil_image.resize(
+            sizing.new_size_keep_aspect_ratio(pil_image.size, size), resample)
 
         image = pygame.image.frombuffer(pil_image.tobytes(), pil_image.size, pil_image.mode)
 
