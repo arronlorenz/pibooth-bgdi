@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Plugin building the final picture montage."""
+
 import os
 import os.path as osp
 import itertools

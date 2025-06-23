@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Helpers to compose background surfaces shown in the GUI."""
+
 import os.path as osp
 import pygame
 

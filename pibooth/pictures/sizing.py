@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+"""Utilities for calculating image resize parameters."""
 
 def new_size_keep_aspect_ratio(original_size, target_size, resize_type='inner'):
     """Return a new size included (if resize_type='inner') or excluded (if resize_type='outer')

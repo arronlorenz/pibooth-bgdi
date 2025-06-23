@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Plugin responsible for sending pictures to the printer."""
+
 import pibooth
 from pibooth.utils import LOGGER
 

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Plugin manager and default core plugins."""
+
 import inspect
 import pluggy
 

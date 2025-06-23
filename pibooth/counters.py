@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Helpers for storing usage counters on disk."""
+
 import pickle
 import os.path as osp
 

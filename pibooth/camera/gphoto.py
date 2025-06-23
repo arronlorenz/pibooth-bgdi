@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Camera backend using gPhoto2 compatible devices."""
+
 import io
 import time
 import pygame

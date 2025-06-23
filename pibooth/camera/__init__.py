@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Camera interfaces for different backends."""
+
 from pibooth.utils import LOGGER
 from pibooth.camera.rpi import RpiCamera, get_rpi_camera_proxy
 from pibooth.camera.gphoto import GpCamera, get_gp_camera_proxy

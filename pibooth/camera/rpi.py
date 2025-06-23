@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Camera backend for the Raspberry Pi Camera Module."""
+
 import time
 import subprocess
 from io import BytesIO

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Plugin driving the GUI transitions."""
+
 import pibooth
 from pibooth.utils import LOGGER, get_crash_message, PoolingTimer
 
