@@ -7,6 +7,8 @@ from pibooth.utils import LOGGER
 from pibooth.pictures import sizing
 from PIL import Image, ImageDraw
 
+RESAMPLE_LANCZOS = getattr(Image, 'Resampling', Image).LANCZOS
+
 try:
     import cv2
     import numpy as np
@@ -245,8 +247,8 @@ class PictureFactory(object):
                       text, color, font=font)
 
     def _build_outlines(self, image):
-        """Build rectangle around each elements. This method is only for
-        debuging purpose.
+        """Build rectangle around each element. This method is only for
+        debugging purpose.
 
         :param image: PIL.Image instance
         :type image: object
@@ -341,7 +343,7 @@ class PictureFactory(object):
         self._final = None  # Force rebuild
 
     def build(self, rebuild=False):
-        """Build the final image or doas nothing if the final image
+        """Build the final image or does nothing if the final image
         has already been built previously.
 
         :param rebuild: force re-build image
@@ -395,11 +397,11 @@ class PilPictureFactory(PictureFactory):
         """
         if crop:
             width, height = sizing.new_size_keep_aspect_ratio(image.size, (max_w, max_h), 'outer')
-            image = image.resize((width, height), Image.ANTIALIAS)
+            image = image.resize((width, height), RESAMPLE_LANCZOS)
             image = image.crop(sizing.new_size_by_croping(image.size, (max_w, max_h)))
         else:
             width, height = sizing.new_size_keep_aspect_ratio(image.size, (max_w, max_h), 'inner')
-            image = image.resize((width, height), Image.ANTIALIAS)
+            image = image.resize((width, height), RESAMPLE_LANCZOS)
         return image, image.size[0], image.size[1]
 
     def _image_paste(self, image, dest_image, pos_x, pos_y):
