@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Camera backend based on OpenCV."""
+
 import time
 import pygame
 try:

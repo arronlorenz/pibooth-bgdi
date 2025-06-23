@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Plugin handling camera operations."""
+
 import time
 import pygame
 import pibooth

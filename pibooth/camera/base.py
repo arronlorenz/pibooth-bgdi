@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Abstract camera driver defining the common API."""
+
 import pygame
 from PIL import Image, ImageDraw
 

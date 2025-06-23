@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Plugin controlling GPIO lights."""
+
 import time
 import pibooth
 

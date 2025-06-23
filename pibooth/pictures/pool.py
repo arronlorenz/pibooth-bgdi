@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Asynchronous workers for generating pictures."""
+
 import multiprocessing
 
 

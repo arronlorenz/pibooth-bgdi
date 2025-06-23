@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+"""Hybrid camera backends mixing preview and capture devices."""
+
 from pibooth.camera.rpi import RpiCamera
 from pibooth.camera.opencv import CvCamera
 from pibooth.camera.gphoto import GpCamera
