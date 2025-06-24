@@ -22,12 +22,13 @@ from pibooth import fonts
 from pibooth import language
 from pibooth.counters import Counters
 from pibooth.utils import (LOGGER, PoolingTimer, configure_logging, get_crash_message,
-                           set_logging_level, get_event_pos)
+                           set_logging_level)
 from pibooth.states import StateMachine
 from pibooth.plugins import create_plugin_manager
 from pibooth.view import PiWindow
 from pibooth.config import PiConfigParser, PiConfigMenu
 from pibooth.printer import PRINTER_TASKS_UPDATED, Printer
+from pibooth.events import EventInfo, analyze_events
 
 
 # Set the default pin factory to a mock factory if pibooth is not started a Raspberry Pi
@@ -255,114 +256,39 @@ class PiApplication(object):
             raise EnvironmentError("The 'capture_date' attribute is not set yet")
         return "{}_pibooth.jpg".format(self.capture_date)
 
+    def _get_event_info(self, events):
+        """Return parsed information for the given events list."""
+        cache = getattr(self, "_events_cache", None)
+        if cache and cache[0] is events:
+            return cache[1]
+
+        info = analyze_events(events, self._window, self.buttons, self._fingerdown_events)
+        self._events_cache = (events, info)
+        return info
+
     def find_quit_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.QUIT:
-                return event
-        return None
+        return self._get_event_info(events).quit
 
     def find_settings_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return event
-            if event.type == BUTTONDOWN and event.capture and event.printer:
-                return event
-            if event.type == pygame.FINGERDOWN:
-                # Press but not release
-                self._fingerdown_events.append(event)
-            if event.type == pygame.FINGERUP:
-                # Resetting touch_events
-                self._fingerdown_events = []
-            if len(self._fingerdown_events) > 3:
-                # 4 fingers on the screen trigger the menu
-                self._fingerdown_events = []
-                return pygame.event.Event(BUTTONDOWN, capture=1, printer=1,
-                                          button=self.buttons)
-        return None
+        return self._get_event_info(events).settings
 
     def find_fullscreen_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.KEYDOWN and \
-                    event.key == pygame.K_f and pygame.key.get_mods() & pygame.KMOD_CTRL:
-                return event
-        return None
+        return self._get_event_info(events).fullscreen
 
     def find_resize_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.VIDEORESIZE:
-                return event
-        return None
+        return self._get_event_info(events).resize
 
     def find_capture_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                return event
-            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
-                pos = get_event_pos(self._window.display_size, event)
-                rect = self._window.get_rect()
-                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    return event
-            if event.type == BUTTONDOWN and event.capture:
-                return event
-        return None
+        return self._get_event_info(events).capture
 
     def find_print_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_e\
-                    and pygame.key.get_mods() & pygame.KMOD_CTRL:
-                return event
-            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
-                pos = get_event_pos(self._window.display_size, event)
-                rect = self._window.get_rect()
-                if pygame.Rect(rect.width // 2, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    return event
-            if event.type == BUTTONDOWN and event.printer:
-                return event
-        return None
+        return self._get_event_info(events).printer
 
     def find_print_status_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == PRINTER_TASKS_UPDATED:
-                return event
-        return None
+        return self._get_event_info(events).print_status
 
     def find_choice_event(self, events):
-        """Return the first found event if found in the list.
-        """
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                return event
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                return event
-            if (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
-                pos = get_event_pos(self._window.display_size, event)
-                rect = self._window.get_rect()
-                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    event.key = pygame.K_LEFT
-                else:
-                    event.key = pygame.K_RIGHT
-                return event
-            if event.type == BUTTONDOWN:
-                if event.capture:
-                    event.key = pygame.K_LEFT
-                else:
-                    event.key = pygame.K_RIGHT
-                return event
-        return None
+        return self._get_event_info(events).choice
 
     def main_loop(self):
         try:
