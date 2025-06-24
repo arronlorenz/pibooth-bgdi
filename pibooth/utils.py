@@ -10,6 +10,7 @@ import os.path as osp
 import logging
 import psutil
 import platform
+import shlex
 from fnmatch import fnmatchcase
 import contextlib
 import errno
@@ -241,17 +242,27 @@ def pkill(pattern):
 
 def open_text_editor(filename):
     """Open a text editor to edit the configuration file.
+
+    The editor defined in the ``EDITOR`` environment variable is tried first.
     """
-    editors = ['leafpad', 'mousepad', 'vi', 'emacs']
+    env_editor = os.environ.get("EDITOR")
+    editors = []
+    if env_editor:
+        editors.append(env_editor)
+    editors.extend(['leafpad', 'mousepad', 'vi', 'emacs'])
+
     for editor in editors:
         try:
-            process = subprocess.Popen([editor, filename])
+            cmd = shlex.split(editor) + [filename]
+            process = subprocess.Popen(cmd)
             process.communicate()
-            return True
+            if process.returncode == 0:
+                return True
         except OSError as e:
             if e.errno != errno.ENOENT:
                 # Something else went wrong while trying to run the editor
                 raise
+
     LOGGER.critical("Can't find installed text editor among %s", editors)
     return False
 
