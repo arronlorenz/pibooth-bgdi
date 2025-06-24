@@ -5,6 +5,7 @@ pygame-menu==4.0.7
 pygame-vkeyboard>=2.0.8
 psutil>=5.5.1
 gpiozero>=1.5.1
+picamera2>=0.3
 opencv-python
 numpy
 pytest
