@@ -77,9 +77,9 @@ Indices and tables
    :target: https://www.pibooth.org
    :align: middle
 
-.. |PythonVersions| image:: https://img.shields.io/badge/python-3.6+-red.svg
+.. |PythonVersions| image:: https://img.shields.io/badge/python-3.9+-red.svg
    :target: https://www.python.org/downloads
-   :alt: Python 3.6+
+   :alt: Python 3.9+
 
 .. |PypiPackage| image:: https://badge.fury.io/py/pibooth.svg
    :target: https://pypi.org/project/pibooth
