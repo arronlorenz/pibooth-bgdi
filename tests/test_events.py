@@ -38,3 +38,23 @@ def test_analyze_events_extracts_flags(monkeypatch):
     assert info.print_status.type == PRINTER_TASKS_UPDATED
     assert info.choice.key == pygame.K_LEFT
     pygame.key.set_mods(0)
+
+
+def test_analyze_events_does_not_mutate_originals():
+    """BUTTONDOWN events forwarded to info.choice must not gain attrs
+    on the original event instance; a copy with the synthetic ``key`` is
+    what should be returned."""
+    pygame.init()
+
+    original = pygame.event.Event(BUTTONDOWN, capture=1)
+    info = analyze_events([original], DummyWindow(), object(), [])
+
+    assert info.choice is not original, "original event was reused instead of copied"
+    assert info.choice.key == pygame.K_LEFT
+    assert not hasattr(original, "key"), "original event was mutated in place"
+
+
+def test_buttondown_is_single_source():
+    """booth.py must import BUTTONDOWN from events, not redefine it."""
+    from pibooth import booth, events
+    assert booth.BUTTONDOWN is events.BUTTONDOWN
