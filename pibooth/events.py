@@ -91,16 +91,21 @@ def analyze_events(
             elif (event.type == pygame.MOUSEBUTTONUP and event.button in (1, 2, 3)) or event.type == pygame.FINGERUP:
                 pos = get_event_pos(window.display_size, event)
                 rect = window.get_rect()
-                if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos):
-                    event.key = pygame.K_LEFT
-                else:
-                    event.key = pygame.K_RIGHT
-                info.choice = event
+                key = pygame.K_LEFT if pygame.Rect(0, 0, rect.width // 2, rect.height).collidepoint(pos) else pygame.K_RIGHT
+                info.choice = _with_key(event, key)
             elif event.type == BUTTONDOWN:
-                if getattr(event, "capture", False):
-                    event.key = pygame.K_LEFT
-                else:
-                    event.key = pygame.K_RIGHT
-                info.choice = event
+                key = pygame.K_LEFT if getattr(event, "capture", False) else pygame.K_RIGHT
+                info.choice = _with_key(event, key)
 
     return info
+
+
+def _with_key(event: pygame.event.Event, key: int) -> pygame.event.Event:
+    """Return a copy of ``event`` augmented with a ``key`` attribute.
+
+    Avoids mutating pygame Event objects in place (which is treated as
+    immutable in modern pygame and raises AttributeError on some versions).
+    """
+    attrs = dict(event.__dict__)
+    attrs["key"] = key
+    return pygame.event.Event(event.type, attrs)
