@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Event helper utilities."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Optional
@@ -10,7 +10,8 @@ import pygame
 from pibooth.utils import get_event_pos
 from pibooth.printer import PRINTER_TASKS_UPDATED
 
-# Duplicate constant from :mod:`pibooth.booth` to avoid circular import
+#: Custom pygame event type fired by hardware button handlers.
+#: Single source of truth — :mod:`pibooth.booth` imports this.
 BUTTONDOWN = pygame.USEREVENT + 1
 
 
