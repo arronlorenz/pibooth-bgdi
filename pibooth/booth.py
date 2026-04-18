@@ -28,7 +28,7 @@ from pibooth.plugins import create_plugin_manager
 from pibooth.view import PiWindow
 from pibooth.config import PiConfigParser, PiConfigMenu
 from pibooth.printer import PRINTER_TASKS_UPDATED, Printer
-from pibooth.events import EventInfo, analyze_events
+from pibooth.events import BUTTONDOWN, EventInfo, analyze_events
 
 
 # Set the default pin factory to a mock factory if pibooth is not started a Raspberry Pi
@@ -41,7 +41,6 @@ except BadPinFactory:
     GPIO_INFO = "without physical GPIO, fallback to GPIO mock"
 
 
-BUTTONDOWN = pygame.USEREVENT + 1
 
 
 class PiApplication(object):
