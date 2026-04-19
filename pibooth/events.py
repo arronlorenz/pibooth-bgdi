@@ -33,7 +33,14 @@ def analyze_events(
     buttons,
     fingerdown_events: List[pygame.event.Event],
 ) -> EventInfo:
-    """Iterate over ``events`` once and return an :class:`EventInfo`."""
+    """Iterate over ``events`` once and return an :class:`EventInfo`.
+
+    A single ``BUTTONDOWN`` with both ``capture=1`` and ``printer=1``
+    legitimately satisfies several slots (settings, capture, printer,
+    choice). That's intentional: the main loop checks
+    ``find_settings_event`` first and short-circuits, so the duplicate
+    fills are inert in practice.
+    """
 
     info = EventInfo()
     for event in events:

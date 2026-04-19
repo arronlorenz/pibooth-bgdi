@@ -16,4 +16,4 @@ ExecStart=/home/pi/.local/bin/pibooth-chevereto
 Nice=10
 IOSchedulingClass=idle
 StandardOutput=journal
-StandardError=journal
+StandardError=inherit
