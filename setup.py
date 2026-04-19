@@ -83,8 +83,15 @@ def main():
             'psutil>=5.5.1',
             'pluggy>=0.13.1',
             'gpiozero>=1.5.1',
-            # RPi.GPIO backend for gpiozero (not always installed by default)
-            'RPi.GPIO>=0.7.0 ; platform_machine>="armv0l" and platform_machine<="armv9l"'
+            # RPi.GPIO backend for gpiozero (not always installed by
+            # default). PEP 508 `>=` / `<=` are *version* comparisons,
+            # not string comparisons — the previous "armv0l..armv9l"
+            # range silently evaluated to False on every architecture
+            # because those strings aren't valid PEP 440 versions. List
+            # the supported machines explicitly. armv6l = Pi Zero/1,
+            # armv7l = Pi 2/3 in 32-bit mode, aarch64 = any Pi running
+            # 64-bit Raspberry Pi OS (including the BGDI Buster booth).
+            'RPi.GPIO>=0.7.0 ; platform_machine == "aarch64" or platform_machine == "armv7l" or platform_machine == "armv6l"'
         ],
         extras_require={
             'dslr': ['gphoto2>=2.0.0'],
