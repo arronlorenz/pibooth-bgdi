@@ -15,7 +15,10 @@ import os
 
 import requests
 
+from pibooth.plugins.chevereto import __version__
+
 LOGGER = logging.getLogger("pibooth")
+USER_AGENT = "pibooth-chevereto/{}".format(__version__)
 
 SLUG_DEFAULT = "Pibooth"
 TITLE_TEMPLATE_DEFAULT = "{slug} Photo Booth Snapshot – {pretty_date}"
@@ -95,6 +98,7 @@ def upload(filepath, api_url, api_key, timeout,
         r = requests.post(
             api_url,
             timeout=timeout,
+            headers={"User-Agent": USER_AGENT},
             data={
                 "key": api_key,
                 "format": "json",
@@ -113,7 +117,7 @@ def upload(filepath, api_url, api_key, timeout,
         # expect — often a Cloudflare interstitial or a maintenance page.
         # Surface a preview so the operator can diagnose from journald
         # without having to re-run with DEBUG logging.
-        body_preview = (r.text or "")[:200].replace("\n", " ")
+        body_preview = r.text[:200].replace("\n", " ")
         raise RuntimeError(
             "unexpected Chevereto response ({}): {!r}".format(exc, body_preview))
 

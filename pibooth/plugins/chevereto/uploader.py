@@ -107,11 +107,16 @@ def _process_one(pending_file, api_url, api_key, upload_timeout, min_age_sec,
             pass
         return None
 
-    # Don't race with the plugin's sync attempt on very new files.
+    # Don't race with the plugin's sync attempt on very new files. If
+    # stat fails (file vanished between glob and getmtime), treat that
+    # as "skip this round"; we'll be re-invoked on the next timer tick.
+    # Previously this fell through to upload, opening a tiny window for
+    # a double-POST.
     try:
         age = time.time() - os.path.getmtime(pending_file)
-    except OSError:
-        age = min_age_sec + 1
+    except OSError as exc:
+        log.warning("could not stat %s: %s — skip this round", pending_file, exc)
+        return None
     if age < min_age_sec:
         log.info("skip, too fresh (%.0fs < %ds): %s", age, min_age_sec, jpg)
         return None

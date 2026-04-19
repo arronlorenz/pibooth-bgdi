@@ -76,8 +76,14 @@ def main():
         installed_any = True
 
     if installed_any and not args.no_reload and not args.dry_run:
-        subprocess.check_call(["udevadm", "control", "--reload-rules"])
-        subprocess.check_call(["udevadm", "trigger"])
+        for cmd in (["udevadm", "control", "--reload-rules"],
+                    ["udevadm", "trigger"]):
+            try:
+                subprocess.check_call(cmd)
+            except subprocess.CalledProcessError as exc:
+                print("pibooth-install-udev: {} exited {} — rules are written but not yet reloaded".format(
+                    " ".join(cmd), exc.returncode), file=sys.stderr)
+                return 3
         print("udev rules reloaded.")
     elif args.dry_run:
         print("(dry run — nothing written)")

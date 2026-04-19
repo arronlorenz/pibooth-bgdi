@@ -90,7 +90,12 @@ def main():
         installed_any = True
 
     if installed_any and not args.no_reload and not args.dry_run:
-        subprocess.check_call(["systemctl", "daemon-reload"])
+        try:
+            subprocess.check_call(["systemctl", "daemon-reload"])
+        except subprocess.CalledProcessError as exc:
+            print("pibooth-install-systemd: systemctl daemon-reload exited {} — units are written but systemd hasn't picked them up yet".format(
+                exc.returncode), file=sys.stderr)
+            return 3
         print("systemd reloaded. Enable the units you want with:")
         print("  sudo systemctl enable --now pibooth")
         print("  sudo systemctl enable --now pibooth-buttons     # if installed")
