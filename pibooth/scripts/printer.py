@@ -19,22 +19,26 @@ def main():
     config = PiConfigParser("~/.config/pibooth/pibooth.cfg", plugin_manager)
 
     conn = cups.Connection()
-    name = config.get('PRINTER', 'printer_name')
+    requested = config.get('PRINTER', 'printer_name')
 
-    if not name or name.lower() == 'default':
+    if not requested or requested.lower() == 'default':
         name = conn.getDefault()
         if not name and conn.getPrinters():
-            name = list(conn.getPrinters().keys())[0]  # Take first one
-    elif name not in conn.getPrinters():
+            name = next(iter(conn.getPrinters()))  # Take first one
+    elif requested in conn.getPrinters():
+        name = requested
+    else:
         name = None
 
     if not name:
-        if name.lower() == 'default':
+        # The error-path branch used to call name.lower() after name was
+        # set to None, which crashed on a Pi with no CUPS printers.
+        # Report against the user-requested string instead.
+        if not requested or requested.lower() == 'default':
             LOGGER.warning("No printer configured in CUPS (see http://localhost:631)")
-            return
         else:
-            LOGGER.warning("No printer named '%s' in CUPS (see http://localhost:631)", name)
-            return
+            LOGGER.warning("No printer named '%s' in CUPS (see http://localhost:631)", requested)
+        return
     else:
         LOGGER.info("Connected to printer '%s'", name)
 
