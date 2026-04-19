@@ -249,15 +249,18 @@ def open_text_editor(filename):
     editors = []
     if env_editor:
         editors.append(env_editor)
-    editors.extend(['leafpad', 'mousepad', 'vi', 'emacs'])
+    editors.extend(['leafpad', 'mousepad', 'emacs'])
 
     for editor in editors:
         try:
             cmd = shlex.split(editor) + [filename]
             process = subprocess.Popen(cmd)
             process.communicate()
-            if process.returncode == 0:
-                return True
+            # Popen succeeded → the editor launched. The user's session outcome
+            # (saved, discarded with :cq, interrupted by SIGHUP, …) is reflected
+            # in returncode and is not our business; don't silently fall through
+            # to the next candidate editor on non-zero.
+            return True
         except OSError as e:
             if e.errno != errno.ENOENT:
                 # Something else went wrong while trying to run the editor

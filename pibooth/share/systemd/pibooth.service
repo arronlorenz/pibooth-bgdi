@@ -1,0 +1,27 @@
+[Unit]
+Description=pibooth photo-booth
+After=multi-user.target
+
+[Service]
+User=pi
+Type=simple
+WorkingDirectory=/home/pi
+ExecStart=/home/pi/.local/bin/pibooth
+Restart=always
+RestartSec=10
+
+# --- environment ---
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
+Environment=SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
+
+# Optional: load secrets (e.g. CHEVERETO_API_KEY if using the chevereto
+# extra). Create /etc/pibooth.env as root:root 600 and put KEY=value
+# lines in it. Remove this line if you don't need environment overrides.
+EnvironmentFile=-/etc/pibooth.env
+
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target

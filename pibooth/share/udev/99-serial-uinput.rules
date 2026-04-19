@@ -1,0 +1,5 @@
+# Give the dialout group read/write on USB-serial adapters used by the
+# pibooth[serial-buttons] bridge, and the input group read/write on
+# /dev/uinput so the bridge can open its virtual keyboard device.
+KERNEL=="ttyUSB[0-9]*", MODE="0660", GROUP="dialout"
+KERNEL=="uinput",       MODE="0660", GROUP="input"

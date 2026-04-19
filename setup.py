@@ -61,13 +61,22 @@ def main():
             'pibooth': ['*.ini'],
             'pibooth.fonts': ['*.ttf'],
             'pibooth.pictures': ['*/*.png'],
+            'pibooth.share.udev': ['*.rules'],
+            'pibooth.share.systemd': ['*.service', '*.timer'],
         },
         include_package_data=True,
-        python_requires=">=3.9",
+        python_requires=">=3.7",
         install_requires=[
-            'picamera2>=0.3 ; platform_machine>="armv0l" and platform_machine<="armv9l"',
-            'picamera>=1.13 ; platform_machine>="armv0l" and platform_machine<="armv9l"',
-            'Pillow>=10.2.0',
+            # Pillow 10+ requires Python 3.8; the BGDI Pi is on 3.7.3. The
+            # 9.x line supports 3.7 through 3.12 and pip will pick the
+            # newest compatible release on each host. Bump the floor when
+            # the Pi moves off Python 3.7.
+            'Pillow>=9.2.0',
+            # importlib.resources.files() was added in Python 3.9.
+            # pibooth.scripts.install_udev / install_systemd need it to
+            # locate shipped .rules / .service files; on 3.7–3.8 the
+            # backport package provides the same API.
+            'importlib_resources >= 5.0 ; python_version < "3.9"',
             'pygame>=1.9.6',
             'pygame-menu==4.0.7',
             'pygame-vkeyboard>=2.0.8',
@@ -80,15 +89,28 @@ def main():
         extras_require={
             'dslr': ['gphoto2>=2.0.0'],
             'printer': ['pycups>=1.9.73', 'pycups-notify>=0.0.4'],
+            'chevereto': ['requests>=2.28'],
+            'serial-buttons': ['pyserial>=3.4', 'python-uinput>=0.11.2'],
             'doc': docs_require
         },
         zip_safe=False,  # Don't install the lib as an .egg zipfile
-        entry_points={'console_scripts': ["pibooth = pibooth.booth:main",
-                                          "pibooth-count = pibooth.scripts.count:main",
-                                          "pibooth-diag = pibooth.scripts.diagnostic:main",
-                                          "pibooth-fonts = pibooth.scripts.fonts:main",
-                                          "pibooth-regen = pibooth.scripts.regenerate:main",
-                                          "pibooth-printcfg = pibooth.scripts.printer:main"]},
+        entry_points={
+            'console_scripts': ["pibooth = pibooth.booth:main",
+                                "pibooth-count = pibooth.scripts.count:main",
+                                "pibooth-diag = pibooth.scripts.diagnostic:main",
+                                "pibooth-fonts = pibooth.scripts.fonts:main",
+                                "pibooth-regen = pibooth.scripts.regenerate:main",
+                                "pibooth-printcfg = pibooth.scripts.printer:main",
+                                "pibooth-chevereto = pibooth.plugins.chevereto.uploader:main",
+                                "pibooth-serial-buttons = pibooth.plugins.serial_buttons.cli:main",
+                                "pibooth-install-udev = pibooth.scripts.install_udev:main",
+                                "pibooth-install-systemd = pibooth.scripts.install_systemd:main",
+                                "pibooth-doctor = pibooth.scripts.doctor:main"],
+            # Pibooth's plugin manager discovers external plugins from this
+            # entry-point group — it calls `load_setuptools_entrypoints("pibooth")`.
+            # Users opt in with `pip install pibooth[chevereto]`.
+            'pibooth': ["chevereto = pibooth.plugins.chevereto.plugin"],
+        },
     )
 
 

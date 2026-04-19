@@ -1,0 +1,4 @@
+# Let cameras show up for gphoto2, but don't auto-mount their storage.
+# Without this, the desktop environment's USB automount grabs the DSLR
+# before pibooth can open it via libgphoto2.
+ACTION=="add", SUBSYSTEM=="usb", ENV{ID_GPHOTO2}=="1", ENV{UDISKS_IGNORE}="1"

@@ -1,0 +1,14 @@
+[Unit]
+Description=Fire pibooth-uploader.service every 5 minutes
+
+[Timer]
+# First run 5 minutes after boot; subsequent runs 5 minutes after the
+# previous one finished. No Persistent=true: a missed tick (Pi was off)
+# is not replayed — only future pendings matter.
+OnBootSec=5min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=pibooth-uploader.service
+
+[Install]
+WantedBy=timers.target

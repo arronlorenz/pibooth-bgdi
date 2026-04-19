@@ -1,0 +1,19 @@
+[Unit]
+Description=pibooth — drain pending Chevereto uploads
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pi
+# CHEVERETO_* env comes from /etc/pibooth.env (root:root 600). No
+# leading `-` on EnvironmentFile= is intentional — the drainer is
+# useless without CHEVERETO_API_KEY / _API_URL / _CAPTURES_DIR, so
+# fail loud at unit-start rather than silently run a no-op.
+EnvironmentFile=/etc/pibooth.env
+# Console script shipped by the pibooth[chevereto] extra.
+ExecStart=/home/pi/.local/bin/pibooth-chevereto
+Nice=10
+IOSchedulingClass=idle
+StandardOutput=journal
+StandardError=journal
