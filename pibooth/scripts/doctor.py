@@ -19,8 +19,6 @@ Each check produces a structured result:
 """
 
 import argparse
-import importlib
-import importlib.util
 import json
 import os
 import shutil
@@ -29,6 +27,20 @@ import sys
 
 
 PASS, WARN, FAIL = "pass", "warn", "fail"
+
+
+# Single source of truth for "is this extra installed?" — the console
+# script only lands on disk when `pip install 'pibooth[<extra>]'` ran,
+# so it's a stronger signal than `find_spec("pibooth.plugins.<x>")`
+# (which is True for both extras since they ship in-tree).
+EXTRA_PROBES = {
+    "chevereto": "pibooth-chevereto",
+    "serial-buttons": "pibooth-serial-buttons",
+}
+
+
+def _have_extra(name):
+    return shutil.which(EXTRA_PROBES[name]) is not None
 
 
 def _result(status, label, detail="", fix=""):
@@ -49,12 +61,11 @@ def check_pibooth_import():
 
 
 def check_extras():
-    """Report which optional extras are importable (not a pass/fail)."""
+    """Report which optional extras are installed (not a pass/fail)."""
     present = []
     missing = []
-    for name, mod in [("chevereto", "pibooth.plugins.chevereto"),
-                      ("serial-buttons", "pibooth.plugins.serial_buttons")]:
-        if importlib.util.find_spec(mod):
+    for name in EXTRA_PROBES:
+        if _have_extra(name):
             present.append(name)
         else:
             missing.append(name)
@@ -102,7 +113,7 @@ def check_gphoto2():
 
 def check_udev_rules():
     required = [("/etc/udev/rules.d/90-no-camera-automount.rules", True)]
-    if importlib.util.find_spec("pibooth.plugins.serial_buttons"):
+    if _have_extra("serial-buttons"):
         required.append(("/etc/udev/rules.d/99-serial-uinput.rules", True))
 
     missing = [p for p, _ in required if not os.path.exists(p)]
@@ -124,9 +135,9 @@ def _systemctl(*args):
 
 def check_systemd_units():
     units = [("pibooth.service", True)]
-    if importlib.util.find_spec("pibooth.plugins.serial_buttons"):
+    if _have_extra("serial-buttons"):
         units.append(("pibooth-buttons.service", True))
-    if importlib.util.find_spec("pibooth.plugins.chevereto"):
+    if _have_extra("chevereto"):
         units.append(("pibooth-uploader.service", True))
         units.append(("pibooth-uploader.timer", True))
 

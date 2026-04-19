@@ -14,7 +14,6 @@ Must be run as root. Triggers ``udevadm control --reload-rules`` and
 """
 
 import argparse
-import importlib.util
 import os
 import shutil
 import subprocess
@@ -29,8 +28,9 @@ except ImportError:  # pragma: no cover — Py 3.7/3.8 fallback
 DEST_DIR = "/etc/udev/rules.d"
 
 
-def _have_extra(mod_name):
-    return importlib.util.find_spec(mod_name) is not None
+def _have_extra_script(console_script):
+    """A pibooth extra is installed iff pip wrote its console script to disk."""
+    return shutil.which(console_script) is not None
 
 
 def _shipped_rule(filename):
@@ -58,12 +58,11 @@ def main():
         return 2
 
     rules = [("90-no-camera-automount.rules", True)]
-    # Install the serial-buttons rule iff pyserial is importable. Gate
-    # on `serial.tools.list_ports` specifically — a stray local
-    # `serial.py` module or the unrelated `serial` PyPI package would
-    # false-positive a bare `serial` lookup.
+    # Install the serial-buttons rule iff the extra's console script is
+    # on disk. That's the strongest signal pip ran with the extra and
+    # both pyserial + python-uinput are present (the bridge needs both).
     rules.append(("99-serial-uinput.rules",
-                  _have_extra("serial.tools.list_ports")))
+                  _have_extra_script("pibooth-serial-buttons")))
 
     print("Installing udev rules into", DEST_DIR)
     installed_any = False

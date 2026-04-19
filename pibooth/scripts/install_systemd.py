@@ -16,7 +16,6 @@ to turn on.
 """
 
 import argparse
-import importlib.util
 import os
 import shutil
 import subprocess
@@ -31,8 +30,9 @@ except ImportError:  # pragma: no cover
 DEST_DIR = "/etc/systemd/system"
 
 
-def _have_module(name):
-    return importlib.util.find_spec(name) is not None
+def _have_extra_script(console_script):
+    """A pibooth extra is installed iff pip wrote its console script to disk."""
+    return shutil.which(console_script) is not None
 
 
 def _shipped_unit(filename):
@@ -59,19 +59,22 @@ def main():
               file=sys.stderr)
         return 2
 
-    # Gate the Chevereto unit files on `requests` being importable:
-    # `pibooth.plugins.chevereto` ships in-tree regardless of the extra,
-    # but `requests` is only pulled in by `pip install 'pibooth[chevereto]'`.
+    # Gate each extra's units on the presence of its console script.
+    # The pibooth.plugins.<extra> packages ship in-tree even without
+    # the extra installed, so a `find_spec` check would false-positive.
+    # The console script only lands when `pip install 'pibooth[<x>]'`
+    # ran, which also guarantees the runtime deps (pyserial+uinput,
+    # requests, …) are present.
     units = [
         ("pibooth.service", True, None),
         ("pibooth-buttons.service",
-         _have_module("serial.tools.list_ports"),
+         _have_extra_script("pibooth-serial-buttons"),
          "pibooth[serial-buttons]"),
         ("pibooth-uploader.service",
-         _have_module("requests"),
+         _have_extra_script("pibooth-chevereto"),
          "pibooth[chevereto]"),
         ("pibooth-uploader.timer",
-         _have_module("requests"),
+         _have_extra_script("pibooth-chevereto"),
          "pibooth[chevereto]"),
     ]
 
