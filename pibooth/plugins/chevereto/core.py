@@ -10,9 +10,12 @@ the ``.pending`` / ``.uploaded`` marker semantics.
 """
 
 import datetime as dt
+import logging
 import os
 
 import requests
+
+LOGGER = logging.getLogger("pibooth")
 
 SLUG_DEFAULT = "Pibooth"
 TITLE_TEMPLATE_DEFAULT = "{slug} Photo Booth Snapshot – {pretty_date}"
@@ -20,6 +23,27 @@ DESCRIPTION_TEMPLATE_DEFAULT = (
     "A candid snapshot captured at the {slug} photo booth. "
     "Enjoy the moment from {pretty_date}."
 )
+
+# Templates with bad placeholders ({date} instead of {pretty_date}, …)
+# raise KeyError on .format(); without this guard the sync plugin would
+# leave .pending and the drainer would hit the same KeyError forever,
+# silently filling the disk. Fall back to the default and log once per
+# offending template so the operator notices on the first capture
+# without every subsequent capture re-spamming the journal.
+_warned_templates = set()
+
+
+def _safe_format(template, default, **fields):
+    try:
+        return template.format(**fields)
+    except KeyError as exc:
+        if template not in _warned_templates:
+            _warned_templates.add(template)
+            LOGGER.warning(
+                "Chevereto template %r references unknown placeholder %s; "
+                "falling back to default. Valid placeholders: %s",
+                template, exc, sorted(fields))
+        return default.format(**fields)
 
 
 def pending_path(filepath):
@@ -46,8 +70,10 @@ def seo_fields(filepath, slug=SLUG_DEFAULT,
         ts = dt.datetime.now()
     pretty_date = ts.strftime("%B %d, %Y")
     name = "{}_{}_pibooth".format(stamp, slug)
-    title = title_template.format(slug=slug, pretty_date=pretty_date)
-    desc = description_template.format(slug=slug, pretty_date=pretty_date)
+    title = _safe_format(title_template, TITLE_TEMPLATE_DEFAULT,
+                         slug=slug, pretty_date=pretty_date)
+    desc = _safe_format(description_template, DESCRIPTION_TEMPLATE_DEFAULT,
+                        slug=slug, pretty_date=pretty_date)
     return name, title, desc
 
 

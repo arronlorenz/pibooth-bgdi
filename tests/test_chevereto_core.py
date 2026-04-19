@@ -56,6 +56,46 @@ def test_seo_fields_honors_custom_templates(tmp_path):
     assert desc.startswith("Acme::D::")
 
 
+def test_seo_fields_falls_back_on_bad_template(tmp_path, caplog):
+    """A typo in the env-var template (e.g. {date} not {pretty_date})
+    must not raise — that would leave every capture stuck in .pending
+    and the drainer would never recover.
+    """
+    core._warned_templates.clear()  # so the warning fires deterministically
+    jpg = _write_jpg(tmp_path)
+    with caplog.at_level("WARNING", logger="pibooth"):
+        _, title, desc = core.seo_fields(
+            str(jpg),
+            slug="Acme",
+            title_template="{slug} on {date}",     # {date} is not provided
+            description_template="{slug} on {date}",
+        )
+    # Got the *default* templates' formatting, not the broken one.
+    assert "Acme" in title and "May 29, 2025" in title
+    assert "Acme" in desc and "May 29, 2025" in desc
+    assert any("unknown placeholder" in r.message for r in caplog.records), \
+        "operator must see a warning explaining the fallback"
+
+
+def test_seo_fields_warns_once_per_bad_template(tmp_path, caplog):
+    """Repeated calls with the same broken template must not respam the
+    journal — once is enough to alert the operator. Distinct template
+    strings each get their own warning.
+    """
+    core._warned_templates.clear()
+    jpg = _write_jpg(tmp_path)
+    with caplog.at_level("WARNING", logger="pibooth"):
+        for _ in range(3):
+            core.seo_fields(str(jpg), slug="Acme",
+                            title_template="{slug} title {nope}",
+                            description_template="{slug} desc {oops}")
+    warnings = [r for r in caplog.records if "unknown placeholder" in r.message]
+    # Two distinct templates → two warnings total across three calls.
+    assert len(warnings) == 2
+    assert any("'nope'" in r.message for r in warnings)
+    assert any("'oops'" in r.message for r in warnings)
+
+
 # ---------------------------------------------------------------------------
 # upload
 # ---------------------------------------------------------------------------
