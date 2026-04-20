@@ -165,14 +165,16 @@ class PicturePlugin(object):
         if image is None:
             return  # worker still running — stay in processing
         app.previous_picture = image
-        # Factory saved to the primary directory in-worker; mirror to
-        # any additional configured directories from the main process.
-        factory = getattr(self, '_pending_factory', None)
+        # Factory saved to the primary directory in-worker; mirror the
+        # built image to any additional configured directories. Use
+        # PIL's image.save directly instead of factory.save — the
+        # worker's factory._final cache doesn't round-trip back to the
+        # main process, so factory.save here would re-composite from
+        # scratch (~1–2 s per extra savedir, blocking the main loop).
         for extra in getattr(self, '_pending_extra_savedirs', ()):
             path = osp.join(extra, app.picture_filename)
             try:
-                if factory is not None:
-                    factory.save(path)
+                image.save(path)
             except Exception as exc:
                 LOGGER.warning("Mirror save to %s failed: %s", path, exc)
         self._pending_factory = None
