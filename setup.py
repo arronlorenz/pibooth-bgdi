@@ -45,9 +45,10 @@ def main():
             'Natural Language :: Spanish',
             'Topic :: Multimedia :: Graphics :: Capture :: Digital Camera',
         ],
-        author="Vincent Verdeil, Antoine Rousseaux",
-        url="https://github.com/pibooth/pibooth",
-        download_url="https://github.com/pibooth/pibooth/archive/{}.tar.gz".format(pibooth.__version__),
+        author="Arron Lorenz",
+        author_email="arronlorenz@gmail.com",
+        maintainer="Blue Grass Drive-In",
+        url="https://github.com/arronlorenz/pibooth-bgdi",
         license='MIT license',
         platforms=['unix', 'linux'],
         keywords=[

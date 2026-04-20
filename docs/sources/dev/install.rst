@@ -13,13 +13,13 @@ need to work from a clone of this ``git`` repository. Replace the step 8. of the
 
 .. code-block:: bash
 
-    git clone https://github.com/pibooth/pibooth.git
+    git clone https://github.com/arronlorenz/pibooth-bgdi.git
 
 2. Go in the cloned directory :
 
 .. code-block:: bash
 
-    cd pibooth
+    cd pibooth-bgdi
 
 3. Install ``pibooth`` in editable mode :
 

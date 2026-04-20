@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
-"""A photo booth application in pure Python for the Raspberry Pi."""
+"""A photo booth application in pure Python for the Raspberry Pi.
 
-__version__ = "2.0.8"
+Originally derived from pibooth-project/pibooth 2.0.8 (Vincent Verdeil
+and Antoine Rousseaux, MIT); significantly diverged as the Blue Grass
+Drive-In fork at github.com/arronlorenz/pibooth-bgdi — Chevereto upload
+plugin, serial-buttons bridge, shipped systemd/udev units, pibooth-doctor,
+window-layer refactor, Python 3.11 / Pillow 10 modernization.
+"""
+
+__version__ = "3.0.0"
 
 try:
 

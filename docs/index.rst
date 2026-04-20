@@ -1,15 +1,18 @@
 
-Welcome to Pibooth's documentation!
-===================================
+Welcome to pibooth-bgdi documentation
+=====================================
 
-|Pibooth|
+The ``pibooth`` package shipped here is the **Blue Grass Drive-In**
+fork of `pibooth-project/pibooth
+<https://github.com/pibooth/pibooth>`_ 2.0.8. Upstream has been
+dormant since 2023-07; this fork has diverged significantly (Python
+3.11 floor, Chevereto plugin, serial-buttons bridge, shipped
+systemd/udev units, window-layer refactor).
 
-|PythonVersions| |PypiPackage| |Downloads|
-
-The ``pibooth`` project provides a photobooth application *out-of-the-box* in
-pure Python for Raspberry Pi. Have a look to the `wiki <https://github.com/pibooth/pibooth/wiki>`_
-to discover some realizations from GitHub users, and don't hesitate to send us
-photos of your version.
+For general-purpose pibooth documentation, refer to the original
+upstream wiki. The rest of these docs cover the API surface that
+survived from upstream; deploy recipes + BGDI-specific layout +
+operator cheatsheets live in the ``pibooth-extras`` sibling repo.
 
 .. image:: images/background_samples.png
    :align: center

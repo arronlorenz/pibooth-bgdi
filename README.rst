@@ -1,91 +1,93 @@
-|Pibooth|
+pibooth-bgdi
+============
 
-|PythonVersions| |PypiPackage| |Downloads| |Tests| |Codecov|
+The photobooth software running at the **Blue Grass Drive-In**.
 
-The ``pibooth`` project provides a photobooth application *out-of-the-box* in pure Python
-for Raspberry Pi. Have a look to the `wiki <https://github.com/pibooth/pibooth/wiki>`_
-to discover some realizations from GitHub users, and don't hesitate to send us
-photos of your version.
+This is a self-contained Raspberry Pi photobooth stack maintained for
+BGDrive.in's drive-in theatre. Originally derived from
+`pibooth-project/pibooth <https://github.com/pibooth/pibooth>`_ 2.0.8
+(MIT license, Vincent Verdeil / Antoine Rousseaux), significantly
+diverged since — upstream has been dormant since 2023-07.
 
-.. image:: https://raw.githubusercontent.com/pibooth/pibooth/master/docs/images/background_samples.png
-   :align: center
-   :alt: Settings
+If you stumbled on this repo looking for a general-purpose pibooth,
+you probably want upstream. This fork is BGDI-specific and is not
+published to PyPI.
 
-Features
---------
+What's different from upstream
+------------------------------
 
-* Interface available in Danish, Dutch, English, French, German, Hungarian, Norwegian, Portuguese (Portugal and Brazil), Spanish and Swedish (customizable)
-* Capture from 1 to 4 photos and concatenate them in a final picture
-* Support all cameras compatible with gPhoto2, OpenCV and Raspberry Pi
-* Support for hardware buttons and lamps on Raspberry Pi GPIO
-* Fully driven from hardware buttons / keyboard / mouse / touchscreen
-* Auto-start at the Raspberry Pi startup
-* Animate captures from the last sequence during idle time
-* Store final pictures and the individual captures
-* Printing final pictures using CUPS server (printing queue indication)
-* Custom texts can be added on the final picture (customizable fonts, colors, alignments)
-* Custom background(s) and overlay(s) can be added on the final picture
-* All settings available in a configuration file (most common options in a graphical interface)
-* Highly customizable thanks to its plugin system, you can install
-  `plugins developed by the community from PyPI  <https://pypi.org/search/?q=pibooth>`_
-  or develop your own plugin.
+* **Python 3.11 / Debian Bookworm floor** — upstream targets 3.7+.
+* **Chevereto upload plugin** as a shipped ``[chevereto]`` extra.
+  Gallery integration with a retry queue + drainer, all pluggy-native.
+* **Serial-buttons bridge** as ``[serial-buttons]`` — USB-serial
+  DSR/DCD line transitions → uinput key events. Parameterized by
+  env var.
+* **Shipped systemd units + udev rules** as package data.
+  ``pibooth-install-udev`` and ``pibooth-install-systemd`` copy the
+  right ones into ``/etc/`` based on which extras are installed.
+* **pibooth-doctor** — preflight health check for the full chain
+  (Python version, X/Wayland session, gphoto2 liveness, udev rules,
+  systemd units, ``/etc/pibooth.env``, captures dir, group
+  membership).
+* **Window/render layer refactor** — ``StateMachine.set_state``
+  baseline surface wipe, ``xrandr --auto`` crash recovery,
+  worker-pool processing (no main-loop freeze during factory build).
+  See ``pibooth-extras/docs/FRAMEWORK_NOTES.md``.
+* **picamera / picamera2 paths dropped** — BGDI uses a DSLR over
+  USB, and legacy picamera is deprecated on Bookworm anyway.
 
-Documentation
+Features carried over from upstream
+-----------------------------------
+
+* 1–4 captures per session, concatenated into a final picture
+* gPhoto2, OpenCV, Raspberry Pi camera support (picamera dropped in
+  this fork)
+* GPIO buttons + lamps on the Pi
+* Fully driven from buttons / keyboard / mouse / touchscreen
+* Auto-start at boot via systemd
+* CUPS printing with queue indication
+* Custom overlays, backgrounds, texts on the final picture
+* pluggy-based plugin system — load external plugins via pip extras
+  or a ``plugins=`` path in ``pibooth.cfg``
+* Multi-language UI (Danish, Dutch, English, French, German,
+  Hungarian, Norwegian, Portuguese, Spanish, Swedish). BGDI runs the
+  English strings.
+
+Installing on the BGDI Pi
+-------------------------
+
+See ``pibooth-extras/docs/INSTALL.md`` — the full recipe is
+``piadmin/setup.sh install`` on a fresh Raspberry Pi OS Bookworm
+image with an external USB at ``/mnt/picstorage``.
+
+For dev-only install::
+
+    pip install --user '.[dslr,chevereto,serial-buttons]'
+
+Console scripts land under ``~/.local/bin/``:
+
+* ``pibooth`` — main app
+* ``pibooth-chevereto`` — upload queue drainer
+* ``pibooth-serial-buttons`` — serial→uinput bridge
+* ``pibooth-install-udev`` / ``pibooth-install-systemd`` — deploy shipped rules/units
+* ``pibooth-doctor`` — preflight diagnostic
+
+Tests::
+
+    SDL_VIDEODRIVER=dummy CAM_VIDEODRIVER=dummy pytest -q
+
+Related repos
 -------------
 
-.. image:: https://raw.githubusercontent.com/pibooth/pibooth/master/docs/images/documentation.png
-   :align: center
-   :alt: Documentation
-   :target: https://pibooth.readthedocs.io/en/stable
-   :height: 200px
+* ``arronlorenz/pibooth-extras`` (private) — BGDI deployment config:
+  runtime cfg, branding assets, env template, Pi admin scripts,
+  operator docs, nested ``pi-shutdown-api`` checkout.
+* ``pibooth-project/pibooth`` — original upstream project. Not
+  tracked for merges — see diff between this fork and
+  ``upstream/master`` if you want the genealogy.
 
-Plugins
+License
 -------
 
-Here is a list of known plugins compatible with Pibooth
-
-Pibooth organisation's plugin
-=============================
-
-- `pibooth-picture-template <https://github.com/pibooth/pibooth-picture-template>`_
-- `pibooth-google-photo <https://github.com/pibooth/pibooth-google-photo>`_
-- `pibooth-sound-effects <https://github.com/pibooth/pibooth-sound-effects>`_
-- `pibooth_dropbox <https://github.com/pibooth/pibooth-dropbox>`_
-- `pibooth-qrcode <https://github.com/pibooth/pibooth-qrcode>`_
-- `pibooth-extra-lights <https://github.com/pibooth/pibooth-extra-lights>`_
-
-Third-party plugins
-===================
-
-Third-party plugins can be found on GitHub or on `plugins on PyPI  <https://pypi.org/search/?q=pibooth>`_.
-Here is a short list:
-
-- `pibooth-lcd-display <https://pypi.org/project/pibooth-lcd-display>`_
-- `pibooth-oled-display <https://pypi.org/project/pibooth-oled-display>`_
-- `pibooth-neopixel_spi <https://github.com/peteoheat/pibooth-neopixel_spi>`_
-- `pibooth-telegram-upload <https://pypi.org/project/pibooth-telegram-upload>`_
-- `pibooth-s3-upload <https://pypi.org/project/pibooth-s3-upload>`_
-
-
-.. |Pibooth| image:: https://raw.githubusercontent.com/pibooth/pibooth/master/docs/pibooth.png
-   :align: middle
-
-.. |PythonVersions| image:: https://img.shields.io/badge/python-3.7+-red.svg
-   :target: https://www.python.org/downloads
-   :alt: Python 3.7+
-
-.. |PypiPackage| image:: https://badge.fury.io/py/pibooth.svg
-   :target: https://pypi.org/project/pibooth
-   :alt: PyPi package
-
-.. |Downloads| image:: https://img.shields.io/pypi/dm/pibooth?color=purple
-   :target: https://pypi.org/project/pibooth
-   :alt: PyPi downloads
-
-.. |Tests| image:: https://github.com/pibooth/pibooth/actions/workflows/tests.yml/badge.svg?branch=master
-   :target: https://github.com/pibooth/pibooth/actions/workflows/tests.yml?query=branch%3Amaster
-   :alt: Tests
-
-.. |Codecov| image:: https://codecov.io/gh/pibooth/pibooth/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/pibooth/pibooth
-    :alt: Codecov
+MIT. Original copyright Vincent Verdeil and Antoine Rousseaux; fork
+changes copyright Arron Lorenz. See ``LICENSE``.

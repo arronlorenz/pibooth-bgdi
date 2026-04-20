@@ -220,4 +220,4 @@ def main():
 
     write_log("If you are investigating why pibooth does not work with your DSLR camera,")
     write_log("please paste the content of generated file '{}'".format(APPNAME + '.log'))
-    write_log("on https://github.com/pibooth/pibooth/issues")
+    write_log("on https://github.com/arronlorenz/pibooth-bgdi/issues")

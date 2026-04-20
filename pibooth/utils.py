@@ -203,7 +203,7 @@ def get_crash_message():
     msg = "system='{}', node='{}', release='{}', version='{}', machine='{}', processor='{}'\n".format(*platform.uname())
     msg += " " + "*" * 83 + "\n"
     msg += " * " + "Oops! It seems that pibooth has crashed".center(80) + "*\n"
-    msg += " * " + "You can report an issue on https://github.com/pibooth/pibooth/issues/new".center(80) + "*\n"
+    msg += " * " + "You can report an issue on https://github.com/arronlorenz/pibooth-bgdi/issues/new".center(80) + "*\n"
     if get_logging_filename():
         msg += " * " + ("and post the file: {}".format(get_logging_filename())).center(80) + "*\n"
     msg += " " + "*" * 83
