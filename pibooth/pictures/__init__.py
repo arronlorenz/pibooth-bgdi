@@ -3,9 +3,8 @@
 import os.path as osp
 from PIL import Image, ImageOps
 
-# Pillow 10 deprecates direct usage of Image.ANTIALIAS/LANCZOS
-RESAMPLE_LANCZOS = getattr(Image, 'Resampling', Image).LANCZOS
-RESAMPLE_NEAREST = getattr(Image, 'Resampling', Image).NEAREST
+RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
+RESAMPLE_NEAREST = Image.Resampling.NEAREST
 import pygame
 from pibooth import language
 from pibooth import fonts

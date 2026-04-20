@@ -324,7 +324,7 @@ class PiConfigMenu(object):
                                        window=None, test=True)
         else:
             event = pygame.event.Event(pygame.KEYDOWN, key=pgm.controls.KEY_RIGHT,
-                                       unicode=u'\uf703', mod=0, scancode=124,
+                                       unicode='\uf703', mod=0, scancode=124,
                                        window=None, test=True)
         return event
 
@@ -332,14 +332,14 @@ class PiConfigMenu(object):
         """Create a pygame event to select the next widget.
         """
         return pygame.event.Event(pygame.KEYDOWN, key=pgm.controls.KEY_MOVE_UP,
-                                  unicode=u'\uf701', mod=0, scancode=125,
+                                  unicode='\uf701', mod=0, scancode=125,
                                   window=None, test=True)
 
     def create_back_event(self):
         """Create a pygame event to back to the previous menu.
         """
         return pygame.event.Event(pygame.KEYDOWN, key=pgm.controls.KEY_BACK,
-                                  unicode=u'\x1b', mod=0, scancode=53,
+                                  unicode='\x1b', mod=0, scancode=53,
                                   window=None, test=True)
 
     def process(self, events):

@@ -18,11 +18,7 @@ import os
 import shutil
 import subprocess
 import sys
-
-try:
-    from importlib.resources import files as _files  # Py 3.9+
-except ImportError:  # pragma: no cover — Py 3.7/3.8 fallback
-    from importlib_resources import files as _files  # type: ignore[no-redef]
+from importlib.resources import files as _files
 
 
 DEST_DIR = "/etc/udev/rules.d"

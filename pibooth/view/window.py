@@ -12,7 +12,7 @@ import pygame
 from pygame import gfxdraw
 from PIL import Image
 
-RESAMPLE_LANCZOS = getattr(Image, 'Resampling', Image).LANCZOS
+RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
 from pibooth import pictures, fonts
 from pibooth.view import background
 from pibooth.utils import LOGGER

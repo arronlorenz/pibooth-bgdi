@@ -7,7 +7,7 @@ from pibooth.utils import LOGGER
 from pibooth.pictures import sizing
 from PIL import Image, ImageDraw
 
-RESAMPLE_LANCZOS = getattr(Image, 'Resampling', Image).LANCZOS
+RESAMPLE_LANCZOS = Image.Resampling.LANCZOS
 
 try:
     import cv2
@@ -235,12 +235,14 @@ class PictureFactory(object):
                 continue
             # Use PIL to draw text because better support for fonts than OpenCV
             font = fonts.get_pil_font(text, font_name, max_width, max_height)
-            if hasattr(font, "getbbox"):
-                bbox = font.getbbox(text)
-                text_height = bbox[3] - bbox[1]
-            else:
-                _, text_height = font.getsize(text)
-            (text_width, _baseline), (offset_x, offset_y) = font.font.getsize(text)
+            # Pillow 10 removed font.getsize / font.font.getsize; compute
+            # width/height + drawing offsets from the glyph bbox. bbox is
+            # (left, top, right, bottom) relative to the default anchor.
+            bbox = font.getbbox(text)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            offset_x = bbox[0]
+            offset_y = bbox[1]
             if align == self.CENTER:
                 text_x += (max_width - text_width) // 2
             elif align == self.RIGHT:

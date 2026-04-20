@@ -20,11 +20,7 @@ import os
 import shutil
 import subprocess
 import sys
-
-try:
-    from importlib.resources import files as _files
-except ImportError:  # pragma: no cover
-    from importlib_resources import files as _files  # type: ignore[no-redef]
+from importlib.resources import files as _files
 
 
 DEST_DIR = "/etc/systemd/system"

@@ -30,9 +30,8 @@ def main():
             'Intended Audience :: End Users/Desktop',
             'License :: OSI Approved :: MIT License',
             'Operating System :: POSIX :: Linux',
-            'Programming Language :: Python :: 3.9',
-            'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
             'Natural Language :: Danish',
             'Natural Language :: Dutch',
             'Natural Language :: English',
@@ -65,20 +64,11 @@ def main():
             'pibooth.share.systemd': ['*.service', '*.timer'],
         },
         include_package_data=True,
-        python_requires=">=3.7",
+        python_requires=">=3.11",
         install_requires=[
-            # Pillow 10+ requires Python 3.8; the BGDI Pi is on 3.7.3. The
-            # 9.x line supports 3.7 through 3.12 and pip will pick the
-            # newest compatible release on each host. Bump the floor when
-            # the Pi moves off Python 3.7.
-            'Pillow>=9.2.0',
-            # importlib.resources.files() was added in Python 3.9.
-            # pibooth.scripts.install_udev / install_systemd need it to
-            # locate shipped .rules / .service files; on 3.7–3.8 the
-            # backport package provides the same API.
-            'importlib_resources >= 5.0 ; python_version < "3.9"',
-            'pygame>=1.9.6',
-            'pygame-menu==4.0.7',
+            'Pillow>=10.0.0',
+            'pygame>=2.1.0',
+            'pygame-menu>=4.5.2',
             'pygame-vkeyboard>=2.0.8',
             'psutil>=5.5.1',
             'pluggy>=0.13.1',

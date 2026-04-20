@@ -49,6 +49,69 @@ def _result(status, label, detail="", fix=""):
 
 # ─── checks ──────────────────────────────────────────────────────────────────
 
+def check_python_version():
+    """Python 3.11 is the fork's supported floor (matches Debian Bookworm).
+    Older interpreters fail at pip install time, but if a user managed to
+    sneak around that (e.g. manually installed deps on a 3.9 venv) the
+    runtime will crash on first capture on a handful of Pillow/pygame
+    calls. Flag it loudly at doctor time."""
+    v = sys.version_info
+    detail = "python {}.{}.{}".format(v.major, v.minor, v.micro)
+    if (v.major, v.minor) < (3, 11):
+        return _result(FAIL, "python version", detail + " — fork requires 3.11+",
+                       "Upgrade to Debian Bookworm (Python 3.11.2) or install python3.11 from a PPA. "
+                       "A fresh Bookworm install is the supported path.")
+    return _result(PASS, "python version", detail)
+
+
+def check_display_session():
+    """Bookworm on Pi 4 defaults to Wayland/labwc; pibooth uses X-specific
+    hints (xrandr --auto crash recovery, SDL_VIDEO_CENTERED). XWayland
+    works but the recovery path silently no-ops. Switch via raspi-config."""
+    session = os.environ.get("XDG_SESSION_TYPE", "")
+    if not session:
+        return _result(WARN, "display session",
+                       "XDG_SESSION_TYPE unset (headless login or systemd service context)",
+                       "This is expected when pibooth-doctor is invoked from root/cron; not a real issue.")
+    if session == "wayland":
+        return _result(WARN, "display session",
+                       "wayland — pibooth's xrandr recovery + SDL_VIDEO_CENTERED are no-ops",
+                       "sudo raspi-config → Advanced Options → Wayland → X11 → reboot")
+    return _result(PASS, "display session", session)
+
+
+def check_libgphoto2_version():
+    """Bookworm ships libgphoto2 2.5.30 which covers all modern DSLRs
+    pibooth supports. Warn if we see an older major (Buster shipped
+    2.5.23, which predates a few Canon PTP dialect fixes)."""
+    gphoto2 = shutil.which("gphoto2")
+    if not gphoto2:
+        return _result(WARN, "libgphoto2 version",
+                       "gphoto2 binary not on PATH (check_gphoto2 already covers it)")
+    try:
+        out = subprocess.check_output([gphoto2, "--version"], text=True,
+                                      stderr=subprocess.STDOUT, timeout=5)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError) as exc:
+        return _result(WARN, "libgphoto2 version",
+                       "could not read gphoto2 --version: {}".format(exc))
+    # "gphoto2 2.5.30" is on the first output line; "libgphoto2 2.5.30"
+    # appears a few lines down.
+    import re
+    m = re.search(r"libgphoto2\s+(\d+)\.(\d+)\.(\d+)", out)
+    if not m:
+        m = re.search(r"gphoto2\s+(\d+)\.(\d+)\.(\d+)", out)
+    if not m:
+        return _result(WARN, "libgphoto2 version",
+                       "could not parse version from gphoto2 --version output")
+    major, minor, patch = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    detail = "{}.{}.{}".format(major, minor, patch)
+    if (major, minor, patch) < (2, 5, 30):
+        return _result(WARN, "libgphoto2 version",
+                       detail + " — older than Bookworm's 2.5.30",
+                       "sudo piadmin/install-latest-gphoto2.sh  (newer libgphoto2 fixes Canon PTP dialect quirks)")
+    return _result(PASS, "libgphoto2 version", detail)
+
+
 def check_pibooth_import():
     try:
         import pibooth  # noqa: F401
@@ -267,6 +330,9 @@ def check_user_groups():
 
 
 ALL_CHECKS = [
+    check_python_version,
+    check_display_session,
+    check_libgphoto2_version,
     check_pibooth_import,
     check_extras,
     check_gphoto2,

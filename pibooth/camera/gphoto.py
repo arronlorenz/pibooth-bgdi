@@ -72,17 +72,17 @@ class GpCamera(BaseCamera):
     """gPhoto2 camera management.
     """
 
-    IMAGE_EFFECTS = [u'none',
-                     u'blur',
-                     u'contour',
-                     u'detail',
-                     u'edge_enhance',
-                     u'edge_enhance_more',
-                     u'emboss',
-                     u'find_edges',
-                     u'smooth',
-                     u'smooth_more',
-                     u'sharpen']
+    IMAGE_EFFECTS = ['none',
+                     'blur',
+                     'contour',
+                     'detail',
+                     'edge_enhance',
+                     'edge_enhance_more',
+                     'emboss',
+                     'find_edges',
+                     'smooth',
+                     'smooth_more',
+                     'sharpen']
 
     def __init__(self, camera_proxy):
         super(GpCamera, self).__init__(camera_proxy)
@@ -119,12 +119,14 @@ class GpCamera(BaseCamera):
     def _rotate_image(self, image, rotation):
         """Rotate a PIL image, same direction than RpiCamera.
         """
+        # Pillow 10 moved the rotation/flip constants under Image.Transpose;
+        # the old Image.ROTATE_* / Image.FLIP_* attributes were removed.
         if rotation == 90:
-            return image.transpose(Image.ROTATE_90)
+            return image.transpose(Image.Transpose.ROTATE_90)
         elif rotation == 180:
-            return image.transpose(Image.ROTATE_180)
+            return image.transpose(Image.Transpose.ROTATE_180)
         elif rotation == 270:
-            return image.transpose(Image.ROTATE_270)
+            return image.transpose(Image.Transpose.ROTATE_270)
         return image
 
     def _get_preview_image(self):
@@ -141,7 +143,7 @@ class GpCamera(BaseCamera):
             image = image.resize(sizing.new_size_keep_aspect_ratio(image.size, (rect.width, rect.height), 'outer'))
 
             if self.preview_flip:
-                image = image.transpose(Image.FLIP_LEFT_RIGHT)
+                image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
         else:
             image = Image.new('RGB', (rect.width, rect.height), color=(0, 0, 0))
 
@@ -169,7 +171,7 @@ class GpCamera(BaseCamera):
         image = image.resize(sizing.new_size_keep_aspect_ratio(image.size, self.resolution, 'outer'))
 
         if self.capture_flip:
-            image = image.transpose(Image.FLIP_LEFT_RIGHT)
+            image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
         if effect != 'none':
             image = image.filter(getattr(ImageFilter, effect.upper()))
