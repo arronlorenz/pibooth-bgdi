@@ -4,6 +4,8 @@
 """
 
 import os
+import shutil
+import subprocess
 import time
 import contextlib
 import pygame
@@ -15,6 +17,24 @@ from pibooth import pictures, fonts
 from pibooth.view import background
 from pibooth.utils import LOGGER
 from pibooth.pictures import sizing
+
+
+def _try_xrandr_auto():
+    """Best-effort call to ``xrandr --auto`` to recover a sane display
+    geometry after a crash. Silent no-op if xrandr isn't installed or
+    no DISPLAY is set.
+    """
+    if not os.environ.get('DISPLAY'):
+        return
+    xrandr = shutil.which('xrandr')
+    if not xrandr:
+        return
+    try:
+        subprocess.run([xrandr, '--auto'],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       timeout=5, check=False)
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        LOGGER.warning("xrandr --auto failed: %s", exc)
 
 
 class PiWindow(object):
@@ -59,6 +79,18 @@ class PiWindow(object):
 
         # Save the desktop mode, shall be done before `setmode` (SDL 1.2.10, and pygame 1.8.0)
         info = pygame.display.Info()
+
+        # Crash-recovery safety net: if the display server reports a
+        # tiny/unset framebuffer (left over from a previous crash
+        # mid-fullscreen), try xrandr --auto to restore a sane
+        # geometry before pygame's set_mode locks it in. Otherwise
+        # pibooth comes back up in a small window in the top-left
+        # corner and only a ``systemctl restart lightdm`` fixes it.
+        if info.current_w * info.current_h < 800 * 600:
+            LOGGER.warning("Suspicious display size %sx%s — running `xrandr --auto` to recover",
+                           info.current_w, info.current_h)
+            _try_xrandr_auto()
+            info = pygame.display.Info()
 
         pygame.display.set_caption(title)
         self.is_fullscreen = False
@@ -240,14 +272,29 @@ class PiWindow(object):
         if self._current_foreground:
             self._update_foreground(*self._current_foreground)
 
+    # The show_* methods share a contract:
+    #  - they paint to self.surface and leave it ready for the main loop's
+    #    single pygame.display.update() at the end of the current tick
+    #  - they do NOT call pygame.display.update() themselves (flash() is
+    #    the exception — it runs a blocking inner loop during capture and
+    #    has to flip visibly from inside that loop)
+    #  - a baseline surface clear happens in StateMachine.set_state so
+    #    callers can assume an empty canvas on state entry
+
     def show_oops(self):
-        """Show failure view in case of exception.
+        """Show failure view.
+
+        Clears surface: via _update_background. Sets _current_foreground: no.
+        Flips display: no (main loop flips).
         """
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.OopsBackground())
 
     def show_intro(self, pil_image=None, with_print=True):
         """Show introduction view.
+
+        Clears surface: via _update_background. Sets _current_foreground:
+        only if ``pil_image`` is given. Flips display: no.
         """
         self._capture_number = (0, self._capture_number[1])
         if with_print and pil_image:
@@ -263,6 +310,9 @@ class PiWindow(object):
 
     def show_choice(self, choices, selected=None):
         """Show the choice view.
+
+        Clears surface: via _update_background. Sets _current_foreground: no.
+        Flips display: no.
         """
         self._capture_number = (0, self._capture_number[1])
         if not selected:
@@ -271,27 +321,43 @@ class PiWindow(object):
             self._update_background(background.ChosenBackground(choices, selected))
 
     def show_image(self, pil_image=None, pos=CENTER):
-        """Show PIL image as it (no resize).
+        """Show PIL image as-is (no resize) on the foreground.
+
+        ``pil_image=None`` clears the whole surface to ``bg_color`` and
+        drops ``_current_foreground``. (Previously it only blacked the
+        previous foreground rect, which left text/overlays painted by
+        plugins untouched — the "TAKE A PHOTO bleeds into preview" bug.)
+
+        Clears surface: yes when ``pil_image`` is None; no otherwise.
+        Sets _current_foreground: only if ``pil_image`` is given.
+        Flips display: no.
         """
         if not pil_image:
-            # Clear the currently displayed image
+            # Clear everything painted on the surface, not just the cached
+            # foreground rect.
             if self._current_foreground:
-                _, image = self._buffered_images.pop(id(self._current_foreground[0]))
-                _, pos, _ = self._current_foreground
+                self._buffered_images.pop(id(self._current_foreground[0]), None)
                 self._current_foreground = None
-                image.fill((0, 0, 0))
-                return self.surface.blit(image, self._pos_map[pos](image))
+            fill = self.bg_color if isinstance(self.bg_color, (tuple, list)) else (0, 0, 0)
+            self.surface.fill(fill)
+            return self.surface.get_rect()
         else:
             return self._update_foreground(pil_image, pos, False)
 
     def show_work_in_progress(self):
-        """Show wait view.
+        """Show processing view.
+
+        Clears surface: via _update_background. Sets _current_foreground: no.
+        Flips display: no.
         """
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.ProcessingBackground())
 
     def show_print(self, pil_image=None):
         """Show print view (image resized on the left).
+
+        Clears surface: via _update_background. Sets _current_foreground:
+        only if ``pil_image`` is given. Flips display: no.
         """
         self._capture_number = (0, self._capture_number[1])
         self._update_background(background.PrintBackground(self.arrow_location,
@@ -301,6 +367,9 @@ class PiWindow(object):
 
     def show_finished(self, pil_image=None):
         """Show finished view (image resized fullscreen).
+
+        Clears surface: via _update_background. Sets _current_foreground:
+        only if ``pil_image`` is given. Flips display: no.
         """
         self._capture_number = (0, self._capture_number[1])
         if pil_image:
@@ -340,6 +409,8 @@ class PiWindow(object):
 
     def set_capture_number(self, current_nbr, total_nbr):
         """Set the current number of captures taken.
+
+        Flips display: no (main loop flips).
         """
         if total_nbr < 1:
             raise ValueError("Total number of captures shall be greater than 0")
@@ -348,10 +419,11 @@ class PiWindow(object):
         self._update_background(background.CaptureBackground())
         if self._current_foreground:
             self._update_foreground(*self._current_foreground)
-        pygame.display.update()
 
     def set_print_number(self, current_nbr=None, failure=None):
         """Set the current number of tasks in the printer queue.
+
+        Flips display: no (main loop flips).
         """
         update = False
 
@@ -367,7 +439,6 @@ class PiWindow(object):
             self._update_background(self._current_background)
             if self._current_foreground:
                 self._update_foreground(*self._current_foreground)
-            pygame.display.update()
 
     def toggle_fullscreen(self):
         """Set window to full screen or initial size.

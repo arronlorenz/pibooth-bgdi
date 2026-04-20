@@ -84,6 +84,18 @@ class StateMachine(object):
             else:
                 raise
 
+        # Baseline surface clear between _exit and _enter so every state
+        # gets a clean canvas. Without this, plugins that paint direct to
+        # win.surface (rather than via win.show_*) bleed content into the
+        # next state — e.g. BGDI's wait_live_preview leaking "TAKE A PHOTO"
+        # text into the preview countdown. The new state's _enter hooks
+        # then paint what they actually want on top of the baseline.
+        # bg_color can be a path (image bg) rather than a colour tuple —
+        # fall back to black in that case; the new state's background
+        # image will paint over it anyway.
+        bg = self.win.bg_color
+        self.win.surface.fill(bg if isinstance(bg, (tuple, list)) else (0, 0, 0))
+
         if state_name not in self.states:
             raise ValueError('"{}" not in registered states...'.format(state_name))
 

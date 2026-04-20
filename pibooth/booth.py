@@ -6,6 +6,7 @@
 
 import os
 import os.path as osp
+import signal
 import tempfile
 import shutil
 import logging
@@ -289,7 +290,29 @@ class PiApplication(object):
     def find_choice_event(self, events):
         return self._get_event_info(events).choice
 
+    def _install_signal_handlers(self):
+        """Translate SIGTERM/SIGINT into a clean pygame QUIT event so the
+        main loop exits, runs pibooth_cleanup, and calls pygame.quit()
+        before the interpreter tears down — otherwise systemd sends
+        SIGTERM, Python exits hard, and X is left with a stale fullscreen
+        grab that the next start has to recover from.
+        """
+        def _shutdown(signum, _frame):
+            LOGGER.info("Received signal %s, requesting shutdown", signum)
+            try:
+                pygame.event.post(pygame.event.Event(pygame.QUIT))
+            except pygame.error:
+                pass  # pygame already torn down
+
+        for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            try:
+                signal.signal(sig, _shutdown)
+            except (ValueError, OSError):
+                # Not running in main thread or signal not supported on platform
+                pass
+
     def main_loop(self):
+        self._install_signal_handlers()
         try:
             fps = 40
             clock = pygame.time.Clock()
@@ -329,6 +352,12 @@ class PiApplication(object):
                 pygame.display.update()
                 clock.tick(fps)  # Ensure the program will never run at more than <fps> frames per second
 
+        except pygame.error as ex:
+            # XIO fatal errors (e.g. lightdm restart while we hold the
+            # display) land here as pygame.error. Shut down cleanly so the
+            # next systemd start picks up xrandr --auto recovery in PiWindow
+            # rather than resuming from a half-torn-down display context.
+            LOGGER.error("Fatal pygame/display error: %s", ex, exc_info=True)
         except Exception as ex:
             LOGGER.error(str(ex), exc_info=True)
             LOGGER.error(get_crash_message())

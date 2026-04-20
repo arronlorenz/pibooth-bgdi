@@ -146,6 +146,14 @@ class ViewPlugin(object):
 
     @pibooth.hookimpl
     def state_processing_validate(self, cfg, app):
+        # Stay in processing until the picture factory worker has
+        # produced the final image (PicturePlugin.state_processing_do
+        # publishes ``app.previous_picture`` when the future resolves).
+        # Without this gate the state machine would transition before
+        # the build finished and the finish screen would render a stale
+        # (or missing) picture.
+        if app.previous_picture is None:
+            return None
         if app.printer.is_ready() and cfg.getfloat('PRINTER', 'printer_delay') > 0\
                 and app.count.remaining_duplicates > 0:
             return 'print'
