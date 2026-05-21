@@ -311,6 +311,31 @@ class GpCamera(BaseCamera):
 
         self._hide_overlay()  # If stop_preview() has not been called
 
+    def reinit(self):
+        """Tear down and re-open the gphoto2 session in place.
+
+        Used to recover from a wedged libgphoto2 state without exiting
+        the pibooth process. Preserves BaseCamera state (resolution,
+        iso, rotation, flip); only the gphoto2 proxy is replaced.
+        Raises RuntimeError if the re-detect/init fails — caller decides
+        what to do next.
+        """
+        if self._cam is not None:
+            try:
+                del self._gp_logcb
+            except Exception:
+                pass
+            try:
+                self._cam.exit()
+            except Exception:
+                pass
+            self._cam = None
+        new_proxy = get_gp_camera_proxy()
+        if new_proxy is None:
+            raise RuntimeError("gphoto2 reinit failed: no camera detected")
+        self._cam = new_proxy
+        self._specific_initialization()
+
     def quit(self):
         """Close the camera driver, it's definitive.
         """
